@@ -34,7 +34,7 @@ export default class App extends React.Component {
 			<div style={{textAlign: 'center'}}>
 				<Title color={this.state.color}>Title is {this.state.length} chars long</Title>
 				<select onChange={this.updateColor}><option>green</option><option>red</option><option>blue</option></select>
-				<input onChange={this.updateText} />
+				<input placeholder="Title..." autoFocus onChange={this.updateText} />
 			</div>
 		);
 	}
