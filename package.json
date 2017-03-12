@@ -24,7 +24,7 @@
   },
   "scripts": {
     "server": "webpack-dev-server --port 8881 --host 0.0.0.0 --hot --inline --history-api-fallback --content-base static/",
-    "compile": "webpack",
+    "compile": "webpack && cp static/* dist/",
     "watch": "webpack --watch"
   }
 }
