@@ -1,8 +1,6 @@
 import React from 'react';
 
 // @todo Redux
-// @todo Row inheritance
-// @todo Sortable columns
 
 
 
@@ -157,6 +155,21 @@ class Table extends React.Component {
 		}, this.serialize);
 	}
 
+	getRows() {
+		const [col, dir] = this.state.sorter;
+		const rows = this.state.rows;
+		rows.sort((a, b) => a[col] > b[col] ? dir * 1 : dir * -1);
+		return rows;
+	}
+
+	sort(col) {
+		const dir = this.state.sorter[0] == col ? -this.state.sorter[1] : 1;
+
+		this.setState({
+			sorter: [col, dir],
+		});
+	}
+
 	render() {
 		var ROW = this.getRowType();
 		return (
@@ -165,9 +178,25 @@ class Table extends React.Component {
 					{ this.getTHead() }
 				</thead>
 				<tbody>
-					{this.state.rows.map(row => <ROW key={ row.id } table={ this } { ...row } />)}
+					{this.getRows().map(row => <ROW key={ row.id } table={ this } { ...row } />)}
 				</tbody>
 			</table>
+		)
+	}
+}
+
+class SortableColumn extends React.Component {
+	update(e) {
+		e.preventDefault();
+
+		this.props.table.sort(this.props.sorter);
+	}
+
+	render() {
+		return (
+			<a href="#" onClick={ this.update.bind(this) }>
+				{ this.props.children }
+			</a>
 		)
 	}
 }
@@ -208,7 +237,7 @@ class BlockedCourtsTable extends Table {
 		super(props);
 
 		this.STORAGE_NAME = window.STORES.bc;
-		this.state = {rows: this.unserialize()};
+		this.state = {sorter: ['id', 1], rows: this.unserialize()};
 	}
 
 	create(index) {
@@ -229,8 +258,8 @@ class BlockedCourtsTable extends Table {
 		return (
 			<tr>
 				<th><AddRowIcon table={ this } /></th>
-				<th>Court</th>
-				<th>Period</th>
+				<th><SortableColumn table={ this } sorter="court">Court</SortableColumn></th>
+				<th><SortableColumn table={ this } sorter="start">Period</SortableColumn></th>
 				<th></th>
 			</tr>
 		)
@@ -271,7 +300,7 @@ class BlockReservationsTable extends Table {
 		super(props);
 
 		this.STORAGE_NAME = window.STORES.br;
-		this.state = {rows: this.unserialize()};
+		this.state = {sorter: ['id', 1], rows: this.unserialize()};
 	}
 
 	create(index) {
@@ -294,10 +323,10 @@ class BlockReservationsTable extends Table {
 		return (
 			<tr>
 				<th><AddRowIcon table={ this } /></th>
-				<th>Player</th>
-				<th>Court</th>
-				<th>Period</th>
-				<th>Reservations</th>
+				<th><SortableColumn table={ this } sorter="player">Player</SortableColumn></th>
+				<th><SortableColumn table={ this } sorter="court">Court</SortableColumn></th>
+				<th><SortableColumn table={ this } sorter="start">Period</SortableColumn></th>
+				<th><SortableColumn table={ this } sorter="reservations">Reservations</SortableColumn></th>
 				<th></th>
 			</tr>
 		)
