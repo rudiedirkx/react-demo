@@ -219,8 +219,7 @@ class BlockedCourtsTable extends Table {
 					</tr>
 				</thead>
 				<tbody>
-					{this.state.rows.map(row =>
-						<BlockedCourtsTableRow key={ row.id } table={ this } { ...row } />)}
+					{this.state.rows.map(row => <BlockedCourtsTableRow key={ row.id } table={ this } { ...row } />)}
 				</tbody>
 			</table>
 		)
