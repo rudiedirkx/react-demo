@@ -156,6 +156,20 @@ class Table extends React.Component {
 			rows: this.state.rows.filter(row => row.id != id)
 		}, this.serialize);
 	}
+
+	render() {
+		var ROW = this.getRowType();
+		return (
+			<table>
+				<thead>
+					{ this.getTHead() }
+				</thead>
+				<tbody>
+					{this.state.rows.map(row => <ROW key={ row.id } table={ this } { ...row } />)}
+				</tbody>
+			</table>
+		)
+	}
 }
 
 
@@ -179,8 +193,8 @@ class BlockedCourtsTableRow extends React.Component {
 
 	render() {
 		return (
-			<tr>
-				<td title={ `ID=${this.props.id}` }><XabledIcon row={ this } { ...this.props } /></td>
+			<tr title={ `ID=${this.props.id}` }>
+				<td><XabledIcon row={ this } { ...this.props } /></td>
 				<td>{ this.props.court }</td>
 				<td>{ this.props.start } - { this.props.end }</td>
 				<td><DeleteIcon row={ this } /></td>
@@ -207,21 +221,18 @@ class BlockedCourtsTable extends Table {
 		};
 	}
 
-	render() {
+	getRowType() {
+		return BlockedCourtsTableRow;
+	}
+
+	getTHead() {
 		return (
-			<table>
-				<thead>
-					<tr>
-						<th><AddRowIcon table={ this } /></th>
-						<th>Court</th>
-						<th>Period</th>
-						<th></th>
-					</tr>
-				</thead>
-				<tbody>
-					{this.state.rows.map(row => <BlockedCourtsTableRow key={ row.id } table={ this } { ...row } />)}
-				</tbody>
-			</table>
+			<tr>
+				<th><AddRowIcon table={ this } /></th>
+				<th>Court</th>
+				<th>Period</th>
+				<th></th>
+			</tr>
 		)
 	}
 }
@@ -243,8 +254,8 @@ class BlockReservationsTableRow extends React.Component {
 
 	render() {
 		return (
-			<tr>
-				<td title={ `ID=${this.props.id}` }><XabledIcon row={ this } { ...this.props } /></td>
+			<tr title={ `ID=${this.props.id}` }>
+				<td><XabledIcon row={ this } { ...this.props } /></td>
 				<td>{ this.props.player }</td>
 				<td>{ this.props.court }</td>
 				<td>{ this.props.start } - { this.props.end }</td>
@@ -275,24 +286,20 @@ class BlockReservationsTable extends Table {
 		};
 	}
 
-	render() {
+	getRowType() {
+		return BlockReservationsTableRow;
+	}
+
+	getTHead() {
 		return (
-			<table>
-				<thead>
-					<tr>
-						<th><AddRowIcon table={ this } /></th>
-						<th>Player</th>
-						<th>Court</th>
-						<th>Period</th>
-						<th>Reservations</th>
-						<th></th>
-					</tr>
-				</thead>
-				<tbody>
-					{this.state.rows.map(row =>
-						<BlockReservationsTableRow key={ row.id } table={ this } { ...row } />)}
-				</tbody>
-			</table>
+			<tr>
+				<th><AddRowIcon table={ this } /></th>
+				<th>Player</th>
+				<th>Court</th>
+				<th>Period</th>
+				<th>Reservations</th>
+				<th></th>
+			</tr>
 		)
 	}
 }
