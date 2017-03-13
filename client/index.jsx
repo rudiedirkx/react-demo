@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom';
 import App from './components/App.jsx';
 import BRApp from './components/BR.jsx';
 import SeriesApp from './components/Series.jsx';
-import { Router, Route, Redirect } from 'react-router';
+import { Router, Route, Redirect, Switch } from 'react-router';
 import { Link } from 'react-router-dom';
 import { createBrowserHistory } from 'history';
 
@@ -19,12 +19,10 @@ ReactDOM.render((
 				{' '}
 				<Link to="/series">Series</Link>
 			</p>
-			<Route exact path="/">
-				<Redirect to="/br" />
-			</Route>
-			<Route exact path="/demo" component={ App } />
-			<Route exact path="/br" component={ BRApp } />
-			<Route exact path="/series" component={ SeriesApp } />
+			<Redirect from="/" to="/br" />
+			<Route path="/br" component={ BRApp } />
+			<Route path="/demo" component={ App } />
+			<Route path="/series" component={ SeriesApp } />
 		</div>
 	</Router>
 ), document.getElementById('root'));

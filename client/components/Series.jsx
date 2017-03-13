@@ -24,5 +24,13 @@ class EnabledIcon extends Icon {
 class WatchingIcon extends Icon {
 }
 
-class DownloadIcon extends React.Component {
+class DownloadIcon extends Icon {
+}
+
+export default class App extends React.Component {
+	render() {
+		return (
+			<div>Series here...</div>
+		)
+	}
 }
