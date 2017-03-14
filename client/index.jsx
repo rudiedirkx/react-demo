@@ -5,10 +5,10 @@ import BRApp from './components/BR.jsx';
 import SeriesApp from './components/Series.jsx';
 import { Router, Route, Redirect, Switch } from 'react-router';
 import { Link } from 'react-router-dom';
-import { createBrowserHistory } from 'history';
+import { createHashHistory } from 'history';
 
 ReactDOM.render((
-	<Router history={ createBrowserHistory() }>
+	<Router history={ createHashHistory() }>
 		<div>
 			<p>
 				<Link to="/">Home</Link>
