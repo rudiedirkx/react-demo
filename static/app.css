@@ -5,3 +5,7 @@ td, th {
 	border: solid 1px black;
 	padding: 6px 10px;
 }
+td.empty {
+	text-align: center;
+	color: #aaa;
+}

@@ -1,10 +1,40 @@
 import React from 'react';
-
-// @todo Redux
-
+import { createStore, combineReducers } from 'redux';
 
 
-window.STORES = {br: 'BR_br_rows', bc: 'BR_bc_rows'};
+
+const tableSorterReducer = (state = ['id', 1], action) => {
+	switch (action.type) {
+		case 'SET_SORTER':
+			var dir = state[0] == action.col ? -state[1] : 1;
+			return [action.col, dir];
+	}
+
+	return state;
+};
+const tableRowsReducer = (state = [], action) => {
+	switch (action.type) {
+		case 'DELETE_ROW':
+			return state.filter(row => row.id != action.id);
+
+		case 'XABLE_ROW':
+			return state.map(row => row.id == action.id ? {...row, enabled: !row.enabled} : row);
+
+		case 'ADD_ROW':
+			var {actionType, ...row} = action;
+			return state.concat(row);
+	}
+
+	return state;
+};
+const tableReducer = combineReducers({
+	sorter: tableSorterReducer,
+	rows: tableRowsReducer,
+});
+const stores = {
+	br: createStore(tableReducer),
+	bc: createStore(tableReducer),
+};
 
 
 
@@ -85,26 +115,51 @@ class DeleteIcon extends Icon {
 
 
 
-
-
+/**
+ * TABLE
+ */
 
 class Table extends React.Component {
 	constructor(props) {
 		super(props);
 
-		this.serialize = this.serialize.bind(this);
+		this.store = props.store;
+		this.unserializing = false;
 	}
 
-	unserialize() {
-		if (!sessionStorage[this.STORAGE_NAME]) {
-			sessionStorage[this.STORAGE_NAME] = JSON.stringify(this.defaultRows());
-		}
+	init() {
+		this.unserializing = true;
+		this.unserialize(rows => {
+			rows.map(row => this.addRow(row));
+			this.unserializing = false;
 
-		return JSON.parse(sessionStorage[this.STORAGE_NAME]);
+			this.forceUpdate();
+			this.listen();
+		});
+	}
+
+	listen() {
+		this.store.subscribe(() => {
+			this.forceUpdate();
+
+			// Too often. Sort shouldn't save
+			this.serialize();
+		});
+	}
+
+	unserialize(ready) {
+		setTimeout(() => {
+			if (!sessionStorage[this.STORAGE_NAME]) {
+				sessionStorage[this.STORAGE_NAME] = JSON.stringify(this.defaultRows());
+			}
+
+			ready(JSON.parse(sessionStorage[this.STORAGE_NAME]));
+		}, this.randomInt(200, 800));
 	}
 
 	serialize() {
-		sessionStorage[this.STORAGE_NAME] = JSON.stringify(this.state.rows);
+		const state = this.store.getState();
+		sessionStorage[this.STORAGE_NAME] = JSON.stringify(state.rows);
 	}
 
 	defaultRows() {
@@ -132,46 +187,35 @@ class Table extends React.Component {
 	}
 
 	nextId() {
-		return this.state && this.state.rows &&
-			this.state.rows.reduce((max, row) => Math.max(max, row.id), 0) + 1 ||
+		const state = this.store.getState();
+		return state.rows.length &&
+			state.rows.reduce((max, row) => Math.max(max, row.id), 0) + 1 ||
 			1;
 	}
 
 	setRowEnabled(id, enabled) {
-		this.setState({
-			rows: this.state.rows.map(row => row.id == id ? {...row, enabled} : row)
-		}, this.serialize);
+		this.store.dispatch({type: 'XABLE_ROW', id, enabled});
 	}
 
-	addRow() {
-		this.setState({
-			rows: this.state.rows.concat([this.create()])
-		}, this.serialize);
+	addRow(row) {
+		row || (row = this.create());
+		this.store.dispatch({...row, type: 'ADD_ROW'});
 	}
 
 	deleteRow(id) {
-		this.setState({
-			rows: this.state.rows.filter(row => row.id != id)
-		}, this.serialize);
+		this.store.dispatch({type: 'DELETE_ROW', id});
 	}
 
 	getRows() {
-		const [col, dir] = this.state.sorter;
-		const rows = this.state.rows;
+		const state = this.store.getState();
+		const [col, dir] = state.sorter;
+		const rows = state.rows;
 		rows.sort((a, b) => a[col] > b[col] ? dir * 1 : dir * -1);
 		return rows;
 	}
 
-	sort(col) {
-		const dir = this.state.sorter[0] == col ? -this.state.sorter[1] : 1;
-
-		this.setState({
-			sorter: [col, dir],
-		});
-	}
-
 	getEmptyMessage() {
-		return 'NO ROWS...';
+		return this.unserializing ? 'LOADING...' : 'NO ROWS...';
 	}
 
 	render() {
@@ -198,7 +242,10 @@ class SortableColumn extends React.Component {
 	update(e) {
 		e.preventDefault();
 
-		this.props.table.sort(this.props.sorter);
+		this.props.table.store.dispatch({
+			type: 'SET_SORTER',
+			col: this.props.sorter,
+		});
 	}
 
 	render() {
@@ -209,10 +256,6 @@ class SortableColumn extends React.Component {
 		)
 	}
 }
-
-
-
-
 
 
 
@@ -246,14 +289,14 @@ class BlockedCourtsTable extends Table {
 	constructor(props) {
 		super(props);
 
-		this.STORAGE_NAME = window.STORES.bc;
-		this.state = {sorter: ['id', 1], rows: this.unserialize()};
+		this.STORAGE_NAME = 'BR_bc_rows';
+		this.init();
 	}
 
 	create(index) {
 		return {
 			id: index == null ? this.nextId() : index + 1,
-			enabled: this.randomInt(0, 2) == 0,
+			enabled: this.randomInt(0, 3) > 0,
 			court: this.randomWord(true) + ' ' + this.randomInt(1, 6),
 			start: this.randomDate(),
 			end: this.randomDate(),
@@ -310,8 +353,8 @@ class BlockReservationsTable extends Table {
 	constructor(props) {
 		super(props);
 
-		this.STORAGE_NAME = window.STORES.br;
-		this.state = {sorter: ['id', 1], rows: this.unserialize()};
+		this.STORAGE_NAME = 'BR_br_rows';
+		this.init();
 	}
 
 	create(index) {
@@ -352,7 +395,8 @@ class BlockReservationsTable extends Table {
 
 export default class App extends React.Component {
 	resetStorage(e) {
-		for (let short in window.STORES) sessionStorage.removeItem(window.STORES[short]);
+		delete sessionStorage.BR_br_rows;
+		delete sessionStorage.BR_bc_rows;
 		document.location.reload();
 	}
 
@@ -362,10 +406,10 @@ export default class App extends React.Component {
 				<button onClick={ this.resetStorage.bind(this) }>RESET</button>
 
 				<h2>Blocked courts</h2>
-				<BlockedCourtsTable />
+				<BlockedCourtsTable store={ stores.bc } />
 
 				<h2>Block reservations</h2>
-				<BlockReservationsTable />
+				<BlockReservationsTable store={ stores.br } />
 			</div>
 		)
 	}
