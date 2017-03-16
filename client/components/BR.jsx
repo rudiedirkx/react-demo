@@ -170,15 +170,24 @@ class Table extends React.Component {
 		});
 	}
 
+	getEmptyMessage() {
+		return 'NO ROWS...';
+	}
+
 	render() {
-		var ROW = this.getRowType();
+		let ROW = this.getRowType();
+		let rows = this.getRows();
+
 		return (
 			<table>
 				<thead>
 					{ this.getTHead() }
 				</thead>
 				<tbody>
-					{this.getRows().map(row => <ROW key={ row.id } table={ this } { ...row } />)}
+					{ rows.length ?
+						rows.map(row => <ROW key={ row.id } table={ this } { ...row } />) :
+						<tr><td className="empty" colSpan={ ROW.colSpan }>{ this.getEmptyMessage() }</td></tr>
+					}
 				</tbody>
 			</table>
 		)
@@ -231,6 +240,7 @@ class BlockedCourtsTableRow extends React.Component {
 		)
 	}
 }
+BlockedCourtsTableRow.colSpan = 4;
 
 class BlockedCourtsTable extends Table {
 	constructor(props) {
@@ -294,6 +304,7 @@ class BlockReservationsTableRow extends React.Component {
 		)
 	}
 }
+BlockReservationsTableRow.colSpan = 6;
 
 class BlockReservationsTable extends Table {
 	constructor(props) {
