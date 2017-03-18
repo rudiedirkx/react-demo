@@ -21,7 +21,7 @@ const tableRowsReducer = (state = [], action) => {
 			return state.map(row => row.id == action.id ? {...row, enabled: !row.enabled} : row);
 
 		case 'ADD_ROW':
-			var {actionType, ...row} = action;
+			var {type, ...row} = action;
 			return state.concat(row);
 	}
 
