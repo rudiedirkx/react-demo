@@ -9,3 +9,21 @@ td.empty {
 	text-align: center;
 	color: #aaa;
 }
+
+/* series */
+tr.active {
+	color: green;
+}
+tr.inactive {
+	color: red;
+}
+tr.watching {
+	font-weight: bold;
+}
+
+button > img {
+	margin-left: .5em;
+}
+button:not(.loading) > img {
+	display: none;
+}

@@ -19,7 +19,6 @@ ReactDOM.render((
 				{' '}
 				<Link to="/series">Series</Link>
 			</p>
-			<Redirect from="/" to="/br" />
 			<Route path="/br" component={ BRApp } />
 			<Route path="/demo" component={ App } />
 			<Route path="/series" component={ SeriesApp } />
