@@ -128,6 +128,8 @@ class Table extends React.Component {
 	}
 
 	init() {
+		if (this.store.getState().rows.length > 0) return;
+
 		this.unserializing = true;
 		this.unserialize(rows => {
 			rows.map(row => this.addRow(row));
@@ -163,7 +165,8 @@ class Table extends React.Component {
 	}
 
 	defaultRows() {
-		return Array.apply(0, Array(this.randomInt(1, 4))).map((u, index) => this.create(index));
+		const numRows = this.randomInt(1, 4);
+		return 'x'.repeat(numRows).split('').map((x, index) => this.create(index));
 	}
 
 	randomWord(ucfirst = false) {
