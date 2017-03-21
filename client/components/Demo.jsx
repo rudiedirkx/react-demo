@@ -2,7 +2,7 @@ import React from 'react';
 
 const Title = ({color = 'red', children}) => <h1 style={{ color }}>{children}</h1>
 
-export default class App extends React.Component {
+export default class Demo extends React.Component {
 	constructor(props) {
 		super(props);
 

@@ -128,7 +128,10 @@ class Table extends React.Component {
 	}
 
 	init() {
-		if (this.store.getState().rows.length > 0) return;
+		if (this.store.getState().rows.length > 0) {
+			this.listen();
+			return;
+		}
 
 		this.unserializing = true;
 		this.unserialize(rows => {
@@ -141,12 +144,16 @@ class Table extends React.Component {
 	}
 
 	listen() {
-		this.store.subscribe(() => {
+		this.unsubscribe = this.store.subscribe(() => {
 			this.forceUpdate();
 
-			// Too often. Sort shouldn't save
+			// @todo This is too often. Sort shouldn't save
 			this.serialize();
 		});
+	}
+
+	componentWillUnmount() {
+		this.unsubscribe();
 	}
 
 	unserialize(ready) {

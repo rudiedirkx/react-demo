@@ -21,8 +21,15 @@ const seriesRowsReducer = (state = [], action) => {
 
 	return state;
 };
+const seriesInactiveReducer = (state = false, action) => {
+	if (action.type == 'ADD_ROWS') {
+		return !action.active;
+	}
+	return state;
+};
 const seriesReducer = combineReducers({
 	rows: seriesRowsReducer,
+	showingInactive: seriesInactiveReducer,
 });
 const seriesStore = createStore(seriesReducer);
 
@@ -33,22 +40,20 @@ class SeriesTable extends React.Component {
 		super(props);
 
 		this.series = props.series;
+		this.unsubscribe = this.series.subscribe(() => this.forceUpdate());
 
-		this.series.subscribe(() => this.forceUpdate());
-
-		var loading = !this.series.inited;
-		if (loading) {
-			this.series.inited = true;
+		const loadInitial = this.series.getState().rows.length == 0;
+		if (loadInitial) {
 			this.loadShows(true);
 		}
+	}
 
-		this.state = {
-			loading,
-			showingInactive: false,
-		};
+	componentWillUnmount() {
+		this.unsubscribe();
 	}
 
 	loadShows(active) {
+		this.loading = true;
 		const url = `series.${active ? 'active' : 'inactive'}.json`;
 console.debug(`Loading ${url}`);
 console.time(`Loaded ${url}`);
@@ -59,12 +64,10 @@ console.timeEnd(`Loaded ${url}`);
 				this.series.dispatch({
 					type: 'ADD_ROWS',
 					rows: rsp.shows.map(show => ({...show, active})),
+					active,
 				});
 
-				this.setState({
-					loading: false,
-					showingInactive: !active,
-				});
+				this.loading = false;
 			});
 	}
 
@@ -76,14 +79,14 @@ console.timeEnd(`Loaded ${url}`);
 	}
 
 	getEmptyMessage() {
-		return this.state.loading ? 'Loading...' : 'No rows...';
+		return this.loading ? 'Loading...' : 'No rows...';
 	}
 
 	render() {
 		const series = this.series.getState();
 
 		let rows = series.rows;
-		if (!this.state.showingInactive) {
+		if (!series.showingInactive) {
 			rows = rows.filter(row => row.active);
 		}
 
@@ -105,7 +108,7 @@ console.timeEnd(`Loaded ${url}`);
 						&& rows.map(row => <SeriesTableRow key={ row.id } table={ this } {...row} />)
 						|| <tr><td colSpan={ 9 }>{ this.getEmptyMessage() }</td></tr>
 					}
-					{ this.state.showingInactive
+					{ series.showingInactive
 						|| <tr><td colSpan={ 9 }><button onClick={ this.loadMore.bind(this) }>
 							LOAD MORE
 							<img src="loading16.gif" />

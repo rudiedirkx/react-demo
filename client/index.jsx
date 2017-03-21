@@ -1,8 +1,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import App from './components/App.jsx';
-import BRApp from './components/BR.jsx';
-import SeriesApp from './components/Series.jsx';
+import Demo from './components/Demo.jsx';
+import BR from './components/BR.jsx';
+import Series from './components/Series.jsx';
 import { Router, Route, Redirect, Switch } from 'react-router';
 import { Link } from 'react-router-dom';
 import { createHashHistory } from 'history';
@@ -19,9 +19,10 @@ ReactDOM.render((
 				{' '}
 				<Link to="/series">Series</Link>
 			</p>
-			<Route path="/br" component={ BRApp } />
-			<Route path="/demo" component={ App } />
-			<Route path="/series" component={ SeriesApp } />
+			<Route exact path="/" component={ (props) => <Redirect to="/br" /> } />
+			<Route exact path="/br" component={ BR } />
+			<Route exact path="/demo" component={ Demo } />
+			<Route exact path="/series" component={ Series } />
 		</div>
 	</Router>
 ), document.getElementById('root'));
