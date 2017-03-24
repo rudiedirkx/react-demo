@@ -404,6 +404,12 @@ class BlockReservationsTable extends Table {
  */
 
 export default class App extends React.Component {
+	componentWillMount() {
+		const upd = () => this.forceUpdate();
+		stores.bc.subscribe(upd);
+		stores.br.subscribe(upd);
+	}
+
 	resetStorage(e) {
 		delete sessionStorage.BR_br_rows;
 		delete sessionStorage.BR_bc_rows;
@@ -413,12 +419,14 @@ export default class App extends React.Component {
 	render() {
 		return (
 			<div>
-				<button onClick={ this.resetStorage.bind(this) }>RESET</button>
+				<button onClick={ this.resetStorage }>RESET</button>
 
-				<h2>Blocked courts</h2>
+				<h1>BR records ({ stores.bc.getState().rows.length + stores.br.getState().rows.length })</h1>
+
+				<h2>Blocked courts ({ stores.bc.getState().rows.length })</h2>
 				<BlockedCourtsTable store={ stores.bc } />
 
-				<h2>Block reservations</h2>
+				<h2>Block reservations ({ stores.br.getState().rows.length })</h2>
 				<BlockReservationsTable store={ stores.br } />
 			</div>
 		)
