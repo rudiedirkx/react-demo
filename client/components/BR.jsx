@@ -1,6 +1,5 @@
 import React from 'react';
 import { createStore, combineReducers } from 'redux';
-import 'babel-polyfill';
 
 
 
@@ -174,7 +173,7 @@ class Table extends React.Component {
 
 	defaultRows() {
 		const numRows = this.randomInt(1, 4);
-		return 'x'.repeat(numRows).split('').map((x, index) => this.create(index));
+		return 'xxxx'.slice(-numRows).split('').map((x, index) => this.create(index));
 	}
 
 	randomWord(ucfirst = false) {

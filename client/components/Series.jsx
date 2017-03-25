@@ -1,6 +1,5 @@
 import React from 'react';
 import { createStore, combineReducers } from 'redux';
-import 'whatwg-fetch';
 
 
 
@@ -56,20 +55,19 @@ class SeriesTable extends React.Component {
 	loadShows(active) {
 		this.loading = true;
 		const url = `series.${active ? 'active' : 'inactive'}.json`;
-console.debug(`Loading ${url}`);
-console.time(`Loaded ${url}`);
-		fetch(url)
-			.then(rsp => rsp.json())
-			.then(rsp => {
-console.timeEnd(`Loaded ${url}`);
-				this.series.dispatch({
-					type: 'ADD_ROWS',
-					rows: rsp.shows.map(show => ({...show, active})),
-					active,
-				});
-
-				this.loading = false;
+		var xhr = new XMLHttpRequest;
+		xhr.open('get', url, true);
+		xhr.onload = (e) => {
+			var rsp = JSON.parse(e.target.responseText);
+			this.series.dispatch({
+				type: 'ADD_ROWS',
+				rows: rsp.shows.map(show => ({...show, active})),
+				active,
 			});
+
+			this.loading = false;
+		}
+		xhr.send();
 	}
 
 	loadMore(e) {
