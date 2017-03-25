@@ -146,9 +146,6 @@ class Table extends React.Component {
 	listen() {
 		this.unsubscribe = this.store.subscribe(() => {
 			this.forceUpdate();
-
-			// @todo This is too often. Sort shouldn't save
-			this.serialize();
 		});
 	}
 
@@ -163,12 +160,14 @@ class Table extends React.Component {
 			}
 
 			ready(JSON.parse(sessionStorage[this.STORAGE_NAME]));
-		}, this.randomInt(200, 800));
+		}, this.randomInt(100, 400));
 	}
 
 	serialize() {
-		const state = this.store.getState();
-		sessionStorage[this.STORAGE_NAME] = JSON.stringify(state.rows);
+		if (!this.unserializing) {
+			const state = this.store.getState();
+			sessionStorage[this.STORAGE_NAME] = JSON.stringify(state.rows);
+		}
 	}
 
 	defaultRows() {
@@ -205,15 +204,18 @@ class Table extends React.Component {
 
 	setRowEnabled(id, enabled) {
 		this.store.dispatch({type: 'XABLE_ROW', id, enabled});
+		this.serialize();
 	}
 
 	addRow(row) {
 		row || (row = this.create());
 		this.store.dispatch({...row, type: 'ADD_ROW'});
+		this.serialize();
 	}
 
 	deleteRow(id) {
 		this.store.dispatch({type: 'DELETE_ROW', id});
+		this.serialize();
 	}
 
 	getRows() {
