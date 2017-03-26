@@ -11,11 +11,9 @@ class TableStore {
 	@observable sorter = ['id', 1];
 
 	@computed get sortedRows() {
-console.log('sortedRows');
 		const [col, dir] = this.sorter;
 		const rows = this.rows;
-		rows.sort((a, b) => a[col] > b[col] ? dir * 1 : dir * -1);
-		return rows;
+		return rows.sort((a, b) => a[col] > b[col] ? dir : -dir);
 	}
 
 	setSorter(col) {
