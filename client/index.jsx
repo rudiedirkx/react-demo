@@ -2,7 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import Demo from './components/Demo.jsx';
 import BR from './components/BR.mobx.jsx';
-import Series from './components/Series.jsx';
+import Series from './components/Series.redux.jsx';
 import { Router, Route, Redirect, Switch } from 'react-router';
 import { Link } from 'react-router-dom';
 import { createHashHistory } from 'history';
