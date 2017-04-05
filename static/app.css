@@ -10,6 +10,14 @@ td.empty {
 	color: #aaa;
 }
 
+/* tabs */
+li.active {
+	font-weight: bold;
+}
+.tab:not(.active) {
+	display: none;
+}
+
 /* series */
 tr.active {
 	color: green;
