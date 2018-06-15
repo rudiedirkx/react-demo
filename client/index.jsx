@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import Demo from './components/Demo.jsx';
-import BR from './components/BR.mobx.jsx';
+import BR from './components/BR.redux.jsx';
 import Series from './components/Series.redux.jsx';
 import TabsApp from './components/Tabs.react.jsx';
 import { Router, Route, Redirect, Switch } from 'react-router';

@@ -14,6 +14,9 @@ const tableSorterReducer = (state = ['id', 1], action) => {
 };
 const tableRowsReducer = (state = [], action) => {
 	switch (action.type) {
+		case 'CLEAR':
+			return [];
+
 		case 'DELETE_ROW':
 			return state.filter(row => row.id != action.id);
 
@@ -406,10 +409,17 @@ class BlockReservationsTable extends Table {
  */
 
 export default class App extends React.Component {
-	componentWillMount() {
+	componentDidMount() {
+console.log('componentDidMount');
 		const upd = () => this.forceUpdate();
 		stores.bc.subscribe(upd);
 		stores.br.subscribe(upd);
+	}
+
+	componentWillUnmount() {
+console.log('componentWillUnmount');
+		stores.bc.dispatch({type: 'CLEAR'});
+		stores.br.dispatch({type: 'CLEAR'});
 	}
 
 	resetStorage(e) {
