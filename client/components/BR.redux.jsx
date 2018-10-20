@@ -1,13 +1,15 @@
 import React from 'react';
 import { createStore, combineReducers } from 'redux';
 
+const INITIAL_SORT = ['id', 1];
 
-
-const tableSorterReducer = (state = ['id', 1], action) => {
+const tableSorterReducer = (state = INITIAL_SORT, action) => {
 	switch (action.type) {
 		case 'SET_SORTER':
 			var dir = state[0] == action.col ? -state[1] : 1;
 			return [action.col, dir];
+		case 'RESET_SORTER':
+			return INITIAL_SORT;
 	}
 
 	return state;
@@ -15,6 +17,7 @@ const tableSorterReducer = (state = ['id', 1], action) => {
 const tableRowsReducer = (state = [], action) => {
 	switch (action.type) {
 		case 'CLEAR':
+console.log('clearing');
 			return [];
 
 		case 'DELETE_ROW':
@@ -60,6 +63,22 @@ class Icon extends React.Component {
 				<img src={ this.getImage() } title={ this.getTitle() } />
 			</a>
 		)
+	}
+}
+
+class RefreshTableIcon extends Icon {
+	update(e) {
+		e.preventDefault();
+
+		this.props.table.reinit();
+	}
+
+	getTitle() {
+		return 'Click to refresh content';
+	}
+
+	getImage() {
+		return 'refresh.png';
 	}
 }
 
@@ -146,6 +165,13 @@ class Table extends React.Component {
 		});
 	}
 
+	reinit() {
+		this.unsubscribe && this.unsubscribe();
+		this.store.dispatch({type: 'CLEAR'});
+		// this.store.dispatch({type: 'RESET_SORTER'});
+		this.init();
+	}
+
 	listen() {
 		this.unsubscribe = this.store.subscribe(() => {
 			this.forceUpdate();
@@ -163,7 +189,7 @@ class Table extends React.Component {
 			}
 
 			ready(JSON.parse(sessionStorage[this.STORAGE_NAME]));
-		}, this.randomInt(100, 400));
+		}, this.randomInt(400, 800));
 	}
 
 	serialize() {
@@ -325,10 +351,10 @@ class BlockedCourtsTable extends Table {
 	getTHead() {
 		return (
 			<tr>
-				<th><AddRowIcon table={ this } /></th>
+				<th><RefreshTableIcon table={ this } /></th>
 				<th><SortableColumn table={ this } sorter="court">Court</SortableColumn></th>
 				<th><SortableColumn table={ this } sorter="start">Period</SortableColumn></th>
-				<th></th>
+				<th><AddRowIcon table={ this } /></th>
 			</tr>
 		)
 	}
@@ -391,12 +417,12 @@ class BlockReservationsTable extends Table {
 	getTHead() {
 		return (
 			<tr>
-				<th><AddRowIcon table={ this } /></th>
+				<th><RefreshTableIcon table={ this } /></th>
 				<th><SortableColumn table={ this } sorter="player">Player</SortableColumn></th>
 				<th><SortableColumn table={ this } sorter="court">Court</SortableColumn></th>
 				<th><SortableColumn table={ this } sorter="start">Period</SortableColumn></th>
 				<th><SortableColumn table={ this } sorter="reservations">Reservations</SortableColumn></th>
-				<th></th>
+				<th><AddRowIcon table={ this } /></th>
 			</tr>
 		)
 	}
@@ -409,15 +435,22 @@ class BlockReservationsTable extends Table {
  */
 
 export default class App extends React.Component {
+	constructor(...args) {
+		super(...args);
+
+		this.unsub = [];
+	}
+
 	componentDidMount() {
 console.log('componentDidMount');
 		const upd = () => this.forceUpdate();
-		stores.bc.subscribe(upd);
-		stores.br.subscribe(upd);
+		this.unsub.push(stores.bc.subscribe(upd));
+		this.unsub.push(stores.br.subscribe(upd));
 	}
 
 	componentWillUnmount() {
 console.log('componentWillUnmount');
+		this.unsub.forEach(unsub => unsub());
 		stores.bc.dispatch({type: 'CLEAR'});
 		stores.br.dispatch({type: 'CLEAR'});
 	}
