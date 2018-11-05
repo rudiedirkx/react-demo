@@ -1,5 +1,17 @@
 import React from 'react';
-import { createStore, combineReducers } from 'redux';
+import { createStore, combineReducers, applyMiddleware } from 'redux';
+import rowsSaga from '../sagas';
+import createSagaMiddleware from 'redux-saga';
+import {takeEvery} from 'redux-saga/effects';
+
+const errorListeners = [];
+const errorListener = store => next => action => {
+	if (action.type == 'ERROR') {
+		errorListeners.forEach(listener => listener(action.error));
+	}
+
+	return next(action);
+};
 
 const INITIAL_SORT = ['id', 1];
 
@@ -29,6 +41,9 @@ console.log('clearing');
 		case 'ADD_ROW':
 			var {type, ...row} = action;
 			return state.concat(row);
+
+		case 'FETCH_ROWS_OK':
+			return action.rows;
 	}
 
 	return state;
@@ -37,10 +52,14 @@ const tableReducer = combineReducers({
 	sorter: tableSorterReducer,
 	rows: tableRowsReducer,
 });
+const sagaMiddlewareBr = createSagaMiddleware();
+const sagaMiddlewareBc = createSagaMiddleware();
 const stores = {
-	br: createStore(tableReducer),
-	bc: createStore(tableReducer),
+	br: createStore(tableReducer, applyMiddleware(errorListener, sagaMiddlewareBr)),
+	bc: createStore(tableReducer, applyMiddleware(errorListener, sagaMiddlewareBc)),
 };
+sagaMiddlewareBr.run(rowsSaga);
+sagaMiddlewareBc.run(rowsSaga);
 
 
 
@@ -146,7 +165,7 @@ class Table extends React.Component {
 		super(props);
 
 		this.store = props.store;
-		this.unserializing = false;
+		this.loading = false;
 	}
 
 	init() {
@@ -155,14 +174,18 @@ class Table extends React.Component {
 			return;
 		}
 
-		this.unserializing = true;
-		this.unserialize(rows => {
-			rows.map(row => this.addRow(row));
-			this.unserializing = false;
+		// this.loading = true;
 
-			this.forceUpdate();
-			this.listen();
-		});
+		this.store.dispatch({type: 'FETCH_ROWS', storage: this.STORAGE_NAME});
+		this.listen();
+
+		// this.unserialize(rows => {
+		// 	rows.map(row => this.addRow(row));
+		// 	this.loading = false;
+		//
+		// 	this.forceUpdate();
+		// 	this.listen();
+		// });
 	}
 
 	reinit() {
@@ -182,18 +205,18 @@ class Table extends React.Component {
 		this.unsubscribe();
 	}
 
-	unserialize(ready) {
-		setTimeout(() => {
-			if (!sessionStorage[this.STORAGE_NAME]) {
-				sessionStorage[this.STORAGE_NAME] = JSON.stringify(this.defaultRows());
-			}
+	// unserialize(ready) {
+	// 	setTimeout(() => {
+	// 		if (!sessionStorage[this.STORAGE_NAME]) {
+	// 			sessionStorage[this.STORAGE_NAME] = JSON.stringify(this.defaultRows());
+	// 		}
 
-			ready(JSON.parse(sessionStorage[this.STORAGE_NAME]));
-		}, this.randomInt(400, 800));
-	}
+	// 		ready(JSON.parse(sessionStorage[this.STORAGE_NAME]));
+	// 	}, this.randomInt(400, 800));
+	// }
 
 	serialize() {
-		if (!this.unserializing) {
+		if (!this.loading) {
 			const state = this.store.getState();
 			sessionStorage[this.STORAGE_NAME] = JSON.stringify(state.rows);
 		}
@@ -256,7 +279,7 @@ class Table extends React.Component {
 	}
 
 	getEmptyMessage() {
-		return this.unserializing ? 'LOADING...' : 'NO ROWS...';
+		return this.loading ? 'LOADING...' : 'NO ROWS...';
 	}
 
 	render() {
@@ -434,6 +457,45 @@ class BlockReservationsTable extends Table {
  * APP
  */
 
+class Errors extends React.Component {
+	constructor(...args) {
+		super(...args);
+
+		this.errors = [];
+
+		errorListeners.push(error => this.add(error));
+	}
+
+	add(error) {
+		this.errors.push({
+			time: Date.now(),
+			message: error,
+		});
+		this.forceUpdate();
+		setTimeout(() => this.forceUpdate(), 2100);
+	}
+
+	get() {
+		return this.errors.filter(error => error.time > Date.now() - 2000).map(error => error.message);
+	}
+
+	render() {
+		const style = {
+			position: 'absolute',
+			top: 10,
+			right: 10,
+			// background: 'red',
+			// color: 'white',
+			// padding: 10
+		};
+		return (
+			<div style={ style }>
+				{ this.get().join(', ') || '[errors]' }
+			</div>
+		)
+	}
+}
+
 export default class App extends React.Component {
 	constructor(...args) {
 		super(...args);
@@ -442,14 +504,14 @@ export default class App extends React.Component {
 	}
 
 	componentDidMount() {
-console.log('componentDidMount');
+// console.log('componentDidMount');
 		const upd = () => this.forceUpdate();
 		this.unsub.push(stores.bc.subscribe(upd));
 		this.unsub.push(stores.br.subscribe(upd));
 	}
 
 	componentWillUnmount() {
-console.log('componentWillUnmount');
+// console.log('componentWillUnmount');
 		this.unsub.forEach(unsub => unsub());
 		stores.bc.dispatch({type: 'CLEAR'});
 		stores.br.dispatch({type: 'CLEAR'});
@@ -464,6 +526,8 @@ console.log('componentWillUnmount');
 	render() {
 		return (
 			<div>
+				<Errors />
+
 				<button onClick={ this.resetStorage }>RESET</button>
 
 				<h1>BR records ({ stores.bc.getState().rows.length + stores.br.getState().rows.length })</h1>
