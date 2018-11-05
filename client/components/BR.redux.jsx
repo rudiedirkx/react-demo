@@ -1,9 +1,23 @@
 import React from 'react';
-import { createStore, combineReducers } from 'redux';
+import { createStore, combineReducers, applyMiddleware } from 'redux';
+import Events from '../Events';
+
+const events = new Events();
+const evMiddle = events.makeMiddleware();
 
 const INITIAL_SORT = ['id', 1];
 
+const tableNameReducer = (state = '', action) => {
+	// console.log('tableNameReducer', action);
+	switch (action.type) {
+		case 'SET_NAME':
+			return action.name;
+	}
+
+	return state;
+};
 const tableSorterReducer = (state = INITIAL_SORT, action) => {
+	// console.log('tableSorterReducer', action);
 	switch (action.type) {
 		case 'SET_SORTER':
 			var dir = state[0] == action.col ? -state[1] : 1;
@@ -15,9 +29,9 @@ const tableSorterReducer = (state = INITIAL_SORT, action) => {
 	return state;
 };
 const tableRowsReducer = (state = [], action) => {
+	// console.log('tableRowsReducer', action);
 	switch (action.type) {
 		case 'CLEAR':
-console.log('clearing');
 			return [];
 
 		case 'DELETE_ROW':
@@ -29,19 +43,25 @@ console.log('clearing');
 		case 'ADD_ROW':
 			var {type, ...row} = action;
 			return state.concat(row);
+
+		case 'SET_ROWS':
+			return action.rows;
 	}
 
 	return state;
 };
 const tableReducer = combineReducers({
+	name: tableNameReducer,
 	sorter: tableSorterReducer,
 	rows: tableRowsReducer,
 });
 const stores = {
-	br: createStore(tableReducer),
-	bc: createStore(tableReducer),
+	br: createStore(tableReducer, applyMiddleware(evMiddle)),
+	bc: createStore(tableReducer, applyMiddleware(evMiddle)),
 };
 
+stores.br.dispatch({type: 'SET_NAME', name: 'br'});
+stores.bc.dispatch({type: 'SET_NAME', name: 'bc'});
 
 
 /**
@@ -157,7 +177,7 @@ class Table extends React.Component {
 
 		this.unserializing = true;
 		this.unserialize(rows => {
-			rows.map(row => this.addRow(row));
+			this.setRows(rows);
 			this.unserializing = false;
 
 			this.forceUpdate();
@@ -240,6 +260,10 @@ class Table extends React.Component {
 		row || (row = this.create());
 		this.store.dispatch({...row, type: 'ADD_ROW'});
 		this.serialize();
+	}
+
+	setRows(rows) {
+		this.store.dispatch({rows, type: 'SET_ROWS'});
 	}
 
 	deleteRow(id) {
@@ -446,6 +470,15 @@ console.log('componentDidMount');
 		const upd = () => this.forceUpdate();
 		this.unsub.push(stores.bc.subscribe(upd));
 		this.unsub.push(stores.br.subscribe(upd));
+
+		events.listen('ADD_ROW', (action, store) => {
+			const state = store.getState();
+			const rows = state.rows.length;
+			const name = state.name;
+			if ( rows >= 5 ) {
+				setTimeout(() => alert(`Ooeeh ${name} is on fire!`), 100);
+			}
+		});
 	}
 
 	componentWillUnmount() {
