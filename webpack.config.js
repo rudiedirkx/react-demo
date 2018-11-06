@@ -9,6 +9,7 @@ const HtmlWebpackPluginConfig = new HtmlWebpackPlugin({
 });
 
 module.exports = {
+//  mode: 'production',
   entry: './client/index.jsx',
   output: {
     path: path.resolve('dist'),
@@ -26,7 +27,7 @@ module.exports = {
       {from: 'static'},
     ]),
   ],
-  watch: true,
+//  watch: true,
   watchOptions: {
     poll: true
   }
